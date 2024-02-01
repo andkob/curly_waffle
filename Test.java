@@ -4,8 +4,26 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
-public class Test {
+/**
+ * This is a Test class with a main method that serves as the entry point for the program. 
+ * The program takes command-line arguments to determine the type of test to run, cache sizes, 
+ * and the file to process. The code utilizes a Cache class to simulate caching behavior, 
+ * specifically implementing a one or two-level cache system.
+ * 
+ * @author Andrew Kobus
+ * @see Cache
+ *
+ */
 
+public class Test {
+	
+	/**
+     * Entry point for the program. Parses command-line arguments to determine the test type,
+     * cache sizes, and the file to process. Invokes the runTest method accordingly.
+     * Prints usage information if the provided arguments are incorrect.
+     *
+     * @param args Command-line arguments specifying the test number, cache sizes, and file name.
+     */
 	public static void main(String[] args) {
 		Test tester = new Test();
 		if (args[0].equals("1")) {
@@ -17,6 +35,17 @@ public class Test {
 		}
 	}
 	
+	/**
+     * Runs a caching test based on the specified test number, cache sizes, and file name.
+     * Creates a first-level cache and optionally a second-level cache.
+     * Reads the specified file, updating the caches based on the test requirements.
+     * Records and prints statistics such as execution time, number of references, cache hits, and hit ratio.
+     *
+     * @param testNum    The test number (1 or 2) indicating the type of caching test to run.
+     * @param cacheSize  The size of the first-level cache.
+     * @param cache2Size The size of the second-level cache (for test 2 only).
+     * @param fileName   The name of the file to process.
+     */
 	public void runTest(int testNum,
 						String cacheSize,
 						String cache2Size,
@@ -89,6 +118,9 @@ public class Test {
 		}
 	}
 	
+	/**
+     * Prints a usage message indicating the correct command-line arguments for running the program.
+     */
 	private void printUsage() {
 		System.out.println("Usage: Java Test [test number (1 or 2)]"
 				+ " [1st-level cache size] [2nd-level cache size (for test 2 only)]"
