@@ -4,12 +4,13 @@ import math
 # Constants
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 800
+BOX_SIZE = pygame.math.Vector2(800, 600)    # UNUSED
 BOX_WIDTH = 800
 BOX_HEIGHT = 600
 BOX_LEFT = (SCREEN_WIDTH - BOX_WIDTH) // 2
 BOX_TOP = (SCREEN_HEIGHT - BOX_HEIGHT) // 2
-NUM_BALLS = 3000
-P_RADIUS = 4
+NUM_PARTICLES = 10000
+P_RADIUS = 2
 GRAVITY = 0.7
 DAMPING_FACTOR = 0.8
 MIN_VELOCITY = 0.1  # Min velocity threshold to stop bouncing
@@ -17,16 +18,19 @@ MIN_VELOCITY = 0.1  # Min velocity threshold to stop bouncing
 # Smoothing kernel parameters
 smoothingRadius = 150  # Adjusted smoothing radius for better influence
 
-# Ball class
+
+# Particle class
 class Particle:
     def __init__(self, position):
         self.pressure = 0.0
         self.density = 0.0
         self.radius = P_RADIUS
-        self.color = (50, 150, 255)
         self.position = position
         self.velocity = pygame.math.Vector2(0, 0)
-        self.acceleration = pygame.math.Vector2(0, 0)
+        self.cForce = pygame.math.Vector2(0, 0)
+        self.color = (50, 150, 255)
+        
+        self.acceleration = pygame.math.Vector2(0, 0) # TODO - to be removed
 
 
     def apply_force(self, force):
@@ -59,8 +63,28 @@ class Particle:
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (int(self.position.x), int(self.position.y)), self.radius)
 
-def smoothingKernel(radius, dist):
-    # first attempt (could not get to work properly though in theory it should)
+
+particleMass = 0.0 # TODO initialize
+viscosity = 0.0 # TODO initialize
+gasConstant = 0.0 # TODO initialize
+restDensity = 0.0 # TODO initialize
+boundDamping = 0.0 # TODO initialize
+# these radius values prevent the need to compute square roots O(n^(1/2))
+radius = 0.0 # TODO initialize
+radius2 = 0.0 # TODO initialize
+radius3 = 0.0 # TODO initialize
+radius4 = 0.0 # TODO initialize
+radius5 = 0.0 # TODO initialize
+particleLength = 0.0 # TODO initialize
+timestep = 0.0 # TODO initialize
+boxSize = 0.0 # TODO initialize
+    
+# STD Kernel
+def smoothingKernel(distSqrd):
+    x = 1.0 - distSqrd / radius2
+    return 315 / (64 * math.pi * radius3) * x ** 3
+    
+    # first attempt (could not get to work properly)
     #volume = math.pi * radius ** 2
     #value = max(0, radius * radius - dist * dist)
     #return (value * value) / volume
@@ -70,22 +94,41 @@ def smoothingKernel(radius, dist):
     #return math.exp(-0.5 * (dist / sigma) ** 2) / (sigma * math.sqrt(2 * math.pi))
     
     # Good sensitivity with radius 150?? but lags WAYYY too much
-    if dist >= radius:
-        return 0.0
-    else:
-        return math.exp(-(dist / radius) ** 2)
+    # if dist >= radius:
+    #     return 0.0
+    # else:
+    #     return math.exp(-(dist / radius) ** 2)
+    
+'''
+Other Kernels
+'''
 
-def calculateDensity(samplePoint):
-    density = 0
-    mass = 1
+def spikyKernelFirstDerivative(dist):
+    x = 1 - dist / radius
+    return -45 / (math.pi * radius4) * x ** 2
 
-    for particle in particles:
-        dist = (particle.position - samplePoint).magnitude()  # Calculate distance to the particle
-        influence = smoothingKernel(smoothingRadius, dist)
-        #debugDensity(dist, influence) # Debug print
-        density += mass * influence
+def spikyKernelSecondDerivative(dist):
+    x = 1 - dist / radius
+    return 90 / (math.pi.radius5) * x
 
-    return density
+def spikyKernelGradient(dist, direction):
+    return spikyKernelFirstDerivative(dist) * direction
+
+# Density and Pressure calculators
+def calculateDensityPressure(sampleParticle):
+    origin = sampleParticle.position
+    Sum = 0
+    
+    for i in range(0, particleLength):
+        diff = origin - particles[i].position
+        distanceSqrd = diff.magitude_squared()
+        
+        # TODO get rid of these multiplications if possible
+        if (radius2 * 0.004 > distanceSqrd * 0.004):
+            Sum += smoothingKernel(distanceSqrd * 0.004) # apply smoothing kernel
+    
+    sampleParticle.density = Sum * particleMass + 0.000001 # addition to ensure it is never 0
+    sampleParticle.pressure = gasConstant * (sampleParticle.density - restDensity)
 
 # Helper debugging function
 def debugDensity(dist, influence):
@@ -97,8 +140,8 @@ def apply_gravity(particle):
 
 # Function to initialize particles
 def initialize_grid():
-    NUM_ROWS = int(math.sqrt(NUM_BALLS))
-    NUM_COLS = (NUM_BALLS - 1) // NUM_ROWS + 1
+    NUM_ROWS = int(math.sqrt(NUM_PARTICLES)) - 17
+    NUM_COLS = (NUM_PARTICLES - 1) // NUM_ROWS + 1
     particles.clear()
     
     # Calculate spacing between balls
@@ -139,7 +182,6 @@ while running:
 
     for p in particles:
         p.move()
-        #calculateDensity(p.position)
 
         
     # Draw everything
