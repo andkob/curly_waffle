@@ -1,2 +1,0 @@
-FileNotFoundException: noSuchFile (The system cannot find the file specified)
-Usage: java CircuitTracer [-s stack | -q queue] [-c console output | -g GUI output] fileName (ex. inputFile.dat)
